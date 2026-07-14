@@ -2,8 +2,8 @@ profiles:
   default:
     description: "Generic web app directory discovery"
     wordlists:
-      - /usr/share/seclists/Discovery/Web-Content/raft-small-words.txt
-      - /usr/share/seclists/Discovery/Web-Content/common.txt
+      - /home/kali/SecLists/Discovery/Web-Content/raft-small-words.txt
+      - /home/kali/SecLists/Discovery/Web-Content/common.txt
     extensions:
       - ""
       - ".php"
@@ -24,8 +24,8 @@ profiles:
   api:
     description: "API endpoints discovery (REST/GraphQL/etc.)"
     wordlists:
-      - /usr/share/seclists/Discovery/Web-Content/api/quickhits.txt
-      - /usr/share/seclists/Discovery/Web-Content/raft-small-words.txt
+      - /home/kali/SecLists/Discovery/Web-Content/api/api-seen-in-wild.txt
+      - /home/kali/SecLists/Discovery/Web-Content/raft-small-words.txt
     extensions:
       - ""
     match_status:
