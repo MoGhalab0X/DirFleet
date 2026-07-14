@@ -1,0 +1,92 @@
+profiles:
+  default:
+    description: "Generic web app directory discovery"
+    wordlists:
+      - /usr/share/seclists/Discovery/Web-Content/raft-small-words.txt
+      - /usr/share/seclists/Discovery/Web-Content/common.txt
+    extensions:
+      - ""
+      - ".php"
+      - ".html"
+      - ".txt"
+    match_status:
+      - 200
+      - 204
+      - 301
+      - 302
+      - 307
+      - 403
+    ignore_regex:
+      - ".*\\.css$"
+      - ".*\\.js$"
+      - ".*\\.(png|jpg|jpeg|gif|svg)$"
+
+  api:
+    description: "API endpoints discovery (REST/GraphQL/etc.)"
+    wordlists:
+      - /usr/share/seclists/Discovery/Web-Content/api/quickhits.txt
+      - /usr/share/seclists/Discovery/Web-Content/raft-small-words.txt
+    extensions:
+      - ""
+    match_status:
+      - 200
+      - 201
+      - 204
+      - 401
+      - 403
+    ignore_regex:
+      - ".*\\.css$"
+      - ".*\\.js$"
+    special_paths:
+      - "/api"
+      - "/v1"
+      - "/v2"
+      - "/graphql"
+
+  wordpress:
+    description: "WordPress-specific discovery"
+    wordlists:
+      - /usr/share/seclists/Discovery/Web-Content/CMS/wp.txt
+      - /usr/share/seclists/Discovery/Web-Content/raft-small-words.txt
+    extensions:
+      - ""
+      - ".php"
+    match_status:
+      - 200
+      - 301
+      - 302
+      - 403
+    base_paths:
+      - "/wp-admin"
+      - "/wp-content"
+      - "/wp-includes"
+    ignore_regex:
+      - ".*\\.css$"
+      - ".*\\.js$"
+      - ".*\\.woff2?$"
+
+  laravel:
+    description: "Laravel/PHP framework oriented discovery"
+    wordlists:
+      - /usr/share/seclists/Discovery/Web-Content/raft-small-words.txt
+      - /usr/share/seclists/Discovery/Web-Content/frameworks/laravel.txt
+    extensions:
+      - ""
+      - ".php"
+      - ".env"
+      - ".log"
+    match_status:
+      - 200
+      - 204
+      - 301
+      - 302
+      - 403
+    base_paths:
+      - "/storage"
+      - "/storage/logs"
+      - "/vendor"
+      - "/config"
+    special_files:
+      - ".env"
+      - "server.php"
+      - "artisan"
