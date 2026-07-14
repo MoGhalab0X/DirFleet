@@ -21,6 +21,53 @@ async def fetch(session, url):
         return {"url": url, "status": "error", "length": 0, "error": str(e)}
 
 
+def compute_baseline_length(results, match_status):
+    lengths = [
+        r["length"]
+        for r in results
+        if isinstance(r.get("status"), int) and r["status"] in match_status and r["length"] > 0
+    ]
+    if not lengths:
+        return 0
+    return sum(lengths) / len(lengths)
+
+
+def keyword_score(url):
+    keywords = ["admin", "administrator", "login", "install", "backup", "tmp", "debug", "config"]
+    score = 0.0
+    lower_url = url.lower()
+    for kw in keywords:
+        if kw in lower_url:
+            score += 0.05  # كل keyword تزود شوية
+    return min(score, 0.3)  # سقف للـ keyword score
+
+
+def status_score(status):
+    if not isinstance(status, int):
+        return 0.0
+    if status in (200, 201):
+        return 0.4
+    if status in (301, 302, 307):
+        return 0.25
+    if status in (401, 403):
+        return 0.2
+    return 0.0
+
+
+def length_score(length, baseline):
+    if baseline <= 0 or length <= 0:
+        return 0.0
+    # نسبة الاختلاف عن المتوسط
+    diff = abs(length - baseline) / baseline
+    if diff < 0.1:
+        return 0.0
+    if diff < 0.3:
+        return 0.1
+    if diff < 0.6:
+        return 0.2
+    return 0.3
+
+
 async def scan_single_base(
     base_url,
     wordlist_path,
@@ -28,9 +75,6 @@ async def scan_single_base(
     match_status=None,
     concurrency=50,
 ):
-    """
-    Native directory scanner for a single base URL using aiohttp.
-    """
     if extensions is None:
         extensions = [""]
     if match_status is None:
@@ -56,8 +100,6 @@ async def scan_single_base(
         async def worker(full_url):
             async with sem:
                 result = await fetch(session, full_url)
-                if isinstance(result["status"], int) and result["status"] in match_status:
-                    print(f"[+] {result['status']:3} | {result['length']:6} | {result['url']}")
                 return result
 
         for word in words:
@@ -66,5 +108,24 @@ async def scan_single_base(
                 full_url = urljoin(base_url.rstrip("/") + "/", path.lstrip("/"))
                 tasks.append(asyncio.create_task(worker(full_url)))
 
-        results = await asyncio.gather(*tasks)
-        return results
+        # نجمع كل النتائج الأول
+        raw_results = await asyncio.gather(*tasks)
+
+        # نحسب baseline length
+        baseline = compute_baseline_length(raw_results, match_status)
+
+        enriched_results = []
+        for r in raw_results:
+            s_score = status_score(r.get("status"))
+            l_score = length_score(r.get("length"), baseline)
+            k_score = keyword_score(r.get("url", ""))
+            total_score = round(s_score + l_score + k_score, 3)
+            r["score"] = total_score
+
+            # نطبع بس الحاجات اللي ليها status مهم وسكور أعلى من 0
+            if isinstance(r.get("status"), int) and r["status"] in match_status and total_score > 0:
+                print(f"[+] {r['status']:3} | {r['length']:6} | score={total_score:.2f} | {r['url']}")
+
+            enriched_results.append(r)
+
+        return enriched_results

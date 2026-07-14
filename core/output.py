@@ -16,6 +16,7 @@ def write_results_json(base_url, results, output_dir):
     out_file = output_dir / f"{host}.json"
     data = {
         "base_url": base_url,
+        "results_count": len(results),
         "results": results,
     }
     out_file.write_text(json.dumps(data, indent=2))
